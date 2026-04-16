@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator Kasir - Sistem POS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- jsPDF Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- AutoTable Plugin for jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.3;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header p {
+            opacity: 0.8;
+            margin-top: 8px;
+            font-size: 0.95rem;
+        }
+
+        .datetime {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            font-size: 0.85rem;
+            opacity: 0.9;
+            background: rgba(255,255,255,0.1);
+            padding: 8px 15px;
+            border-radius: 20px;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 2px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #64748b;
+            margin-bottom: 6px;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-wrapper .currency {
+            position: absolute;
+            left: 12px;
+            font-weight: 600;
+            color: #64748b;
+            font-size: 0.95rem;
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            padding: 12px 12px 12px 40px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: 'Poppins', sans-serif;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .input-wrapper input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .input-wrapper input:hover {
+            border-color: #cbd5e1;
+        }
+
+        .payment-methods {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .payment-card {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .payment-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .payment-card .icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+
+        .payment-card.cash .icon { background: #dcfce7; }
+        .payment-card.qris-bca .icon { background: #dbeafe; }
+        .payment-card.qris-mandiri .icon { background: #fef3c7; }
+        .payment-card.edc-bca .icon { background: #ede9fe; }
+        .payment-card.grab .icon { background: #ecfdf5; }
+        .payment-card.gofood .icon { background: #fef2f2; }
+        .payment-card.shopeefood .icon { background: #fff7ed; }
+
+        .payment-card label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #374151;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .payment-card input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            text-align: right;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .payment-card input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .summary-section {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            border-radius: 16px;
+            padding: 25px;
+            margin-top: 20px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .summary-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .summary-item.highlight {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .summary-item.warning {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        .summary-item.danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+
+        .summary-item.success {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .summary-item label {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .summary-item .value {
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        .selisih-box {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: 700;
+            transition: all 0.3s ease;
+        }
+
+        .selisih-box.balanced {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+
+        .selisih-box.surplus {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+        }
+
+        .selisih-box.deficit {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+
+        .catatan-section {
+            margin-top: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .catatan-section label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 10px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .catatan-section label::before {
+            content: '📝 ';
+        }
+
+        .catatan-section textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 12px 15px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-family: 'Poppins', sans-serif;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            resize: vertical;
+            transition: all 0.3s ease;
+        }
+
+        .catatan-section textarea::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .catatan-section textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .catatan-hint {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 8px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            flex: 1;
+            min-width: 140px;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #475569;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+
+        .btn-pdf {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .history-section {
+            margin-top: 25px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: white;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .history-item .time {
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        .history-item .amount {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .pdf-preview {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .pdf-preview.active {
+            display: flex;
+        }
+
+        .pdf-preview-content {
+            background: white;
+            border-radius: 16px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 30px;
+        }
+
+        .pdf-preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .pdf-preview-header h2 {
+            color: #1e293b;
+            font-size: 1.3rem;
+        }
+
+        .close-btn {
+            background: #e2e8f0;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: #cbd5e1;
+        }
+
+        .pdf-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        .pdf-table th,
+        .pdf-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .pdf-table th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: #475569;
+        }
+
+        .pdf-table td {
+            color: #1e293b;
+        }
+
+        .pdf-total {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+
+        .pdf-total-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .pdf-total-row:last-child {
+            margin-bottom: 0;
+            padding-top: 8px;
+            border-top: 1px solid rgba(255,255,255,0.3);
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .pdf-catatan {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .pdf-catatan h4 {
+            color: #475569;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .pdf-catatan p {
+            color: #1e293b;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .pdf-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+                max-width: 100%;
+            }
+            .btn-group, .history-section, .pdf-preview {
+                display: none;
+            }
+            .catatan-section textarea {
+                background: white;
+                color: #1e293b;
+                border: 1px solid #e2e8f0;
+            }
+            .catatan-section label {
+                color: #1e293b;
+            }
+            .catatan-hint {
+                color: #64748b;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            .datetime {
+                position: static;
+                margin-top: 15px;
+                display: inline-block;
+            }
+            .content {
+                padding: 20px;
+            }
+            .btn {
+                min-width: 100%;
+            }
+        }
+
+        .input-hint {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="datetime" id="datetime"></div>
+            <h1>💰 Kalkulator Kasir</h1>
+            <p>Sistem Manajemen Kas & Rekonsiliasi Penjualan</p>
+        </div>
+
+        <div class="content">
+            <!-- Kas Awal -->
+            <div class="section">
+                <div class="section-title">Kas Awal (Modal)</div>
+                <div class="form-grid">
+                    <div class="input-group">
+                        <label>Modal Awal Kasir</label>
+                        <div class="input-wrapper">
+                            <span class="currency">Rp</span>
+                            <input type="number" id="kasAwal" placeholder="0" oninput="calculateAll()">
+                        </div>
+                        <div class="input-hint">Uang yang diserahkan sebelum shift dimulai</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Metode Pembayaran -->
+            <div class="section">
+                <div class="section-title">Metode Pembayaran</div>
+                <div class="payment-methods">
+                    <div class="payment-card cash">
+                        <div class="icon">💵</div>
+                        <label>Cash (Tunai)</label>
+                        <input type="number" id="cash" placeholder="0" oninput="calculateAll()">
+                    </div>
+                    <div class="payment-card qris-bca">
+                        <div class="icon">📱</div>
+                        <label>QRIS BCA</label>
+                        <input type="number" id="qrisBca" placeholder="0" oninput="calculateAll()">
+                    </div>
+                    <div class="payment-card qris-mandiri">
+                        <div class="icon">📲</div>
+                        <label>QRIS Mandiri</label>
+                        <input type="number" id="qrisMandiri" placeholder="0" oninput="calculateAll()">
+                    </div>
+                    <div class="payment-card edc-bca">
+                        <div class="icon">💳</div>
+                        <label>EDC BCA</label>
+                        <input type="number" id="edcBca" placeholder="0" oninput="calculateAll()">
+                    </div>
+                    <div class="payment-card grab">
+                        <div class="icon">🛵</div>
+                        <label>GrabFood</label>
+                        <input type="number" id="grab" placeholder="0" oninput="calculateAll()">
+                    </div>
+                    <div class="payment-card gofood">
+                        <div class="icon">🍜</div>
+                        <label>GoFood</label>
+                        <input type="number" id="gofood" placeholder="0" oninput="calculateAll()">
+                    </div>
+                    <div class="payment-card shopeefood">
+                        <div class="icon">🍱</div>
+                        <label>ShopeeFood</label>
+                        <input type="number" id="shopeefood" placeholder="0" oninput="calculateAll()">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Uang Fisik -->
+            <div class="section">
+                <div class="section-title">Verifikasi Uang Fisik</div>
+                <div class="form-grid">
+                    <div class="input-group">
+                        <label>Total Uang di Laci (Fisik)</label>
+                        <div class="input-wrapper">
+                            <span class="currency">Rp</span>
+                            <input type="number" id="uangFisik" placeholder="0" oninput="calculateAll()">
+                        </div>
+                        <div class="input-hint">Hitung manual semua uang tunai di laci kasir</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ringkasan -->
+            <div class="summary-section">
+                <div class="section-title" style="color: white; margin-bottom: 20px;">Ringkasan Transaksi</div>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <label>Total Penjualan</label>
+                        <div class="value" id="totalPenjualan">Rp 0</div>
+                    </div>
+                    <div class="summary-item">
+                        <label>Non-Tunai (QRIS/EDC/Ojol)</label>
+                        <div class="value" id="totalNonTunai">Rp 0</div>
+                    </div>
+                    <div class="summary-item highlight">
+                        <label>Expected Cash</label>
+                        <div class="value" id="expectedCash">Rp 0</div>
+                    </div>
+                    <div class="summary-item">
+                        <label>Uang Fisik</label>
+                        <div class="value" id="displayUangFisik">Rp 0</div>
+                    </div>
+                </div>
+
+                <div class="selisih-box" id="selisihBox">
+                    <div>Selisih: <span id="selisih">Rp 0</span></div>
+                    <div style="font-size: 0.9rem; margin-top: 8px; font-weight: 400;" id="selisihStatus">-</div>
+                </div>
+
+                <!-- CATATAN SECTION -->
+                <div class="catatan-section">
+                    <label>Catatan / Keterangan</label>
+                    <textarea id="catatan" placeholder="Contoh: 
+- Uang receh kurang 5.000
+- Refund customer A 25.000
+- Deposit vendor 100.000
+- Lainnya..."></textarea>
+                    <div class="catatan-hint">Catatan akan tersimpan bersama data transaksi. Gunakan untuk mencatat alasan selisih atau transaksi khusus.</div>
+                </div>
+            </div>
+
+            <!-- Tombol Aksi -->
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="calculateAll()">
+                    <span>🔄</span> Hitung Ulang
+                </button>
+                <button class="btn btn-secondary" onclick="resetForm()">
+                    <span>🗑️</span> Reset
+                </button>
+                <button class="btn btn-success" onclick="saveTransaction()">
+                    <span>💾</span> Simpan
+                </button>
+                <button class="btn btn-pdf" onclick="previewPDF()">
+                    <span>📄</span> Preview PDF
+                </button>
+                <button class="btn btn-danger" onclick="downloadPDF()">
+                    <span>⬇️</span> Download PDF
+                </button>
+            </div>
+
+            <!-- Riwayat -->
+            <div class="section history-section" id="historySection" style="display: none;">
+                <div class="section-title">Riwayat Transaksi Hari Ini</div>
+                <div id="historyList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PDF Preview Modal -->
+    <div class="pdf-preview" id="pdfPreview">
+        <div class="pdf-preview-content">
+            <div class="pdf-preview-header">
+                <h2>📄 Preview Laporan Kasir</h2>
+                <button class="close-btn" onclick="closePDFPreview()">×</button>
+            </div>
+            <div id="pdfPreviewBody">
+                <!-- Content will be generated here -->
+            </div>
+            <div class="pdf-actions">
+                <button class="btn btn-danger" onclick="downloadPDF()" style="flex: 1;">
+                    <span>⬇️</span> Download PDF
+                </button>
+                <button class="btn btn-secondary" onclick="closePDFPreview()" style="flex: 1;">
+                    <span>✕</span> Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Format Rupiah
+        function formatRupiah(angka) {
+            if (angka === '' || angka === null || angka === undefined) return 'Rp 0';
+            return 'Rp ' + parseInt(angka).toLocaleString('id-ID');
+        }
+
+        // Update datetime
+        function updateDateTime() {
+            const now = new Date();
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            };
+            document.getElementById('datetime').textContent = now.toLocaleDateString('id-ID', options);
+        }
+
+        // Get all values
+        function getValues() {
+            return {
+                kasAwal: parseInt(document.getElementById('kasAwal').value) || 0,
+                cash: parseInt(document.getElementById('cash').value) || 0,
+                qrisBca: parseInt(document.getElementById('qrisBca').value) || 0,
+                qrisMandiri: parseInt(document.getElementById('qrisMandiri').value) || 0,
+                edcBca: parseInt(document.getElementById('edcBca').value) || 0,
+                grab: parseInt(document.getElementById('grab').value) || 0,
+                gofood: parseInt(document.getElementById('gofood').value) || 0,
+                shopeefood: parseInt(document.getElementById('shopeefood').value) || 0,
+                uangFisik: parseInt(document.getElementById('uangFisik').value) || 0,
+                catatan: document.getElementById('catatan').value
+            };
+        }
+
+        // Calculate all values
+        function calculateAll() {
+            const val = getValues();
+
+            // Calculate totals
+            const totalPenjualan = val.cash + val.qrisBca + val.qrisMandiri + val.edcBca + val.grab + val.gofood + val.shopeefood;
+            const totalNonTunai = val.qrisBca + val.qrisMandiri + val.edcBca + val.grab + val.gofood + val.shopeefood;
+            const expectedCash = val.kasAwal + val.cash;
+            const selisih = val.uangFisik - expectedCash;
+
+            // Update display
+            document.getElementById('totalPenjualan').textContent = formatRupiah(totalPenjualan);
+            document.getElementById('totalNonTunai').textContent = formatRupiah(totalNonTunai);
+            document.getElementById('expectedCash').textContent = formatRupiah(expectedCash);
+            document.getElementById('displayUangFisik').textContent = formatRupiah(val.uangFisik);
+            document.getElementById('selisih').textContent = formatRupiah(Math.abs(selisih));
+
+            // Update selisih box
+            const selisihBox = document.getElementById('selisihBox');
+            const selisihStatus = document.getElementById('selisihStatus');
+
+            selisihBox.className = 'selisih-box';
+            
+            if (selisih === 0) {
+                selisihBox.classList.add('balanced');
+                selisihStatus.textContent = '✅ Kas BALANCE - Tidak ada selisih';
+            } else if (selisih > 0) {
+                selisihBox.classList.add('surplus');
+                selisihStatus.textContent = `📈 Kas SURPLUS (Lebih ${formatRupiah(selisih)})`;
+            } else {
+                selisihBox.classList.add('deficit');
+                selisihStatus.textContent = `📉 Kas DEFICIT (Kurang ${formatRupiah(Math.abs(selisih))})`;
+            }
+
+            return { totalPenjualan, totalNonTunai, expectedCash, selisih };
+        }
+
+        // Reset form
+        function resetForm() {
+            if (confirm('Apakah Anda yakin ingin mereset semua data?')) {
+                document.getElementById('kasAwal').value = '';
+                document.getElementById('cash').value = '';
+                document.getElementById('qrisBca').value = '';
+                document.getElementById('qrisMandiri').value = '';
+                document.getElementById('edcBca').value = '';
+                document.getElementById('grab').value = '';
+                document.getElementById('gofood').value = '';
+                document.getElementById('shopeefood').value = '';
+                document.getElementById('uangFisik').value = '';
+                document.getElementById('catatan').value = '';
+                calculateAll();
+            }
+        }
+
+        // Save transaction
+        function saveTransaction() {
+            const val = getValues();
+            const calc = calculateAll();
+
+            const transaction = {
+                time: new Date().toLocaleTimeString('id-ID'),
+                total: val.cash + val.qrisBca + val.qrisMandiri + val.edcBca + val.grab + val.gofood + val.shopeefood,
+                selisih: val.uangFisik - (val.kasAwal + val.cash),
+                catatan: val.catatan
+            };
+
+            let history = JSON.parse(localStorage.getItem('kasirHistory') || '[]');
+            history.push(transaction);
+            localStorage.setItem('kasirHistory', JSON.stringify(history));
+
+            updateHistoryDisplay();
+            alert('Transaksi berhasil disimpan!');
+        }
+
+        // Update history display
+        function updateHistoryDisplay() {
+            const history = JSON.parse(localStorage.getItem('kasirHistory') || '[]');
+            const historySection = document.getElementById('historySection');
+            const historyList = document.getElementById('historyList');
+
+            if (history.length > 0) {
+                historySection.style.display = 'block';
+                historyList.innerHTML = history.slice(-5).reverse().map(item => {
+                    const status = item.selisih === 0 ? '✅ Balance' : 
+                                  item.selisih > 0 ? `📈 +${formatRupiah(item.selisih)}` : 
+                                  `📉 ${formatRupiah(item.selisih)}`;
+                    const catatanIcon = item.catatan ? '📝' : '';
+                    return `
+                        <div class="history-item">
+                            <div>
+                                <div class="time">${item.time} ${catatanIcon}</div>
+                                <div style="font-weight: 600; margin-top: 4px;">${formatRupiah(item.total)}</div>
+                            </div>
+                            <div class="amount" style="color: ${item.selisih === 0 ? '#10b981' : item.selisih > 0 ? '#3b82f6' : '#ef4444'}">${status}</div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        // Generate PDF Content
+        function generatePDFContent() {
+            const val = getValues();
+            const calc = calculateAll();
+            const now = new Date();
+            
+            let selisihText = '';
+            let selisihClass = '';
+            if (calc.selisih === 0) {
+                selisihText = 'BALANCE';
+                selisihClass = 'balanced';
+            } else if (calc.selisih > 0) {
+                selisihText = `SURPLUS (+${formatRupiah(calc.selisih)})`;
+                selisihClass = 'surplus';
+            } else {
+                selisihText = `DEFICIT (${formatRupiah(calc.selisih)})`;
+                selisihClass = 'deficit';
+            }
+
+            return `
+                <div style="text-align: center; margin-bottom: 25px;">
+                    <h2 style="color: #1e293b; margin-bottom: 5px;">LAPORAN KASIR</h2>
+                    <p style="color: #64748b; font-size: 0.9rem;">${now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                </div>
+
+                <table class="pdf-table">
+                    <thead>
+                        <tr>
+                            <th colspan="2">📊 Rincian Transaksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Kas Awal (Modal)</td>
+                            <td style="text-align: right; font-weight: 600;">${formatRupiah(val.kasAwal)}</td>
+                        </tr>
+                        <tr>
+                            <td>💵 Cash (Tunai)</td>
+                            <td style="text-align: right; font-weight: 600;">${formatRupiah(val.cash)}</td>
+                        </tr>
+                        <tr>
+                            <td>📱 QRIS BCA</td>
+                            <td style="text-align: right; font-weight: 600;">${formatRupiah(val.qrisBca)}</td>
+                        </tr>
+                        <tr>
+                            <td>📲 QRIS Mandiri</td>
+                            <td style="text-align: right; font-weight: 600;">${formatRupiah(val.qrisMandiri)}</td>
+                        </tr>
+                        <tr>
+                            <td>💳 EDC BCA</td>
+                            <td style="text-align: right; font-weight: 600;">${formatRupiah(val.edcBca)}</td>
+                        </tr>
+                        <tr>
+                            <td>🛵 GrabFood</td>
+                            <td style="text-align: right; font-weight: 600;">${formatRupiah(val.grab)}</td>
+                        </tr>
+                        <tr>
+                            <td>🍜 GoFood</td>
+                            <td style="text-align: right; font-weight: 600;">${formatRupiah(val.gofood)}</td>
+                        </tr>
+                        <tr>
+                            <td>🍱 ShopeeFood</td>
+                            <td style="text-align: right; font-weight: 600;">${formatRupiah(val.shopeefood)}</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="pdf-total">
+                    <div class="pdf-total-row">
+                        <span>Total Penjualan</span>
+                        <span>${formatRupiah(calc.totalPenjualan)}</span>
+                    </div>
+                    <div class="pdf-total-row">
+                        <span>Non-Tunai (QRIS/EDC/Ojol)</span>
+                        <span>${formatRupiah(calc.totalNonTunai)}</span>
+                    </div>
+                    <div class="pdf-total-row">
+                        <span>Expected Cash</span>
+                        <span>${formatRupiah(calc.expectedCash)}</span>
+                    </div>
+                    <div class="pdf-total-row">
+                        <span>Uang Fisik di Laci</span>
+                        <span>${formatRupiah(val.uangFisik)}</span>
+                    </div>
+                    <div class="pdf-total-row">
+                        <span>Status Selisih</span>
+                        <span style="font-size: 1.2rem;">${selisihText}</span>
+                    </div>
+                </div>
+
+                ${val.catatan ? `
+                <div class="pdf-catatan">
+                    <h4>📝 Catatan / Keterangan:</h4>
+                    <p>${val.catatan.replace(/\n/g, '<br>')}</p>
+                </div>
+                ` : ''}
+
+                <div style="margin-top: 30px; padding-top: 20px; border-top: 2px dashed #e2e8f0; text-align: center; color: #94a3b8; font-size: 0.85rem;">
+                    <p>Dicetak oleh Sistem Kalkulator Kasir</p>
+                    <p>${now.toLocaleString('id-ID')}</p>
+                </div>
+            `;
+        }
+
+        // Preview PDF
+        function previewPDF() {
+            const content = generatePDFContent();
+            document.getElementById('pdfPreviewBody').innerHTML = content;
+            document.getElementById('pdfPreview').classList.add('active');
+        }
+
+        // Close PDF Preview
+        function closePDFPreview() {
+            document.getElementById('pdfPreview').classList.remove('active');
+        }
+
+        // Download PDF using jsPDF
+        async function downloadPDF() {
+            const { jsPDF } = window.jspdf;
+            const val = getValues();
+            const calc = calculateAll();
+            const now = new Date();
+            
+            // Create PDF
+            const doc = new jsPDF();
+            
+            // Add header
+            doc.setFontSize(20);
+            doc.setTextColor(30, 41, 59);
+            doc.text('LAPORAN KASIR', 105, 20, { align: 'center' });
+            
+            doc.setFontSize(10);
+            doc.setTextColor(100, 116, 139);
+            doc.text(now.toLocaleDateString('id-ID', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            }), 105, 28, { align: 'center' });
+
+            // Add table
+            const tableData = [
+                ['Kas Awal (Modal)', formatRupiah(val.kasAwal)],
+                ['Cash (Tunai)', formatRupiah(val.cash)],
+                ['QRIS BCA', formatRupiah(val.qrisBca)],
+                ['QRIS Mandiri', formatRupiah(val.qrisMandiri)],
+                ['EDC BCA', formatRupiah(val.edcBca)],
+                ['GrabFood', formatRupiah(val.grab)],
+                ['GoFood', formatRupiah(val.gofood)],
+                ['ShopeeFood', formatRupiah(val.shopeefood)],
+            ];
+
+            doc.autoTable({
+                startY: 40,
+                head: [['Metode Pembayaran', 'Jumlah']],
+                body: tableData,
+                theme: 'striped',
+                headStyles: { 
+                    fillColor: [102, 126, 234],
+                    textColor: 255,
+                    fontStyle: 'bold'
+                },
+                styles: { 
+                    fontSize: 11,
+                    cellPadding: 5
+                },
+                columnStyles: {
+                    0: { cellWidth: 100 },
+                    1: { cellWidth: 60, halign: 'right' }
+                }
+            });
+
+            // Add summary
+            const finalY = doc.lastAutoTable.finalY + 10;
+            
+            doc.setFillColor(30, 41, 59);
+            doc.rect(14, finalY, 182, 60, 'F');
+            
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(11);
+            
+            let currentY = finalY + 10;
+            
+            doc.text('Total Penjualan:', 20, currentY);
+            doc.text(formatRupiah(calc.totalPenjualan), 176, currentY, { align: 'right' });
+            
+            currentY += 10;
+            doc.text('Non-Tunai (QRIS/EDC/Ojol):', 20, currentY);
+            doc.text(formatRupiah(calc.totalNonTunai), 176, currentY, { align: 'right' });
+            
+            currentY += 10;
+            doc.text('Expected Cash:', 20, currentY);
+            doc.text(formatRupiah(calc.expectedCash), 176, currentY, { align: 'right' });
+            
+            currentY += 10;
+            doc.text('Uang Fisik di Laci:', 20, currentY);
+            doc.text(formatRupiah(val.uangFisik), 176, currentY, { align: 'right' });
+            
+            currentY += 12;
+            doc.setFontSize(13);
+            doc.setFont(undefined, 'bold');
+            
+            let selisihText = '';
+            if (calc.selisih === 0) {
+                selisihText = 'BALANCE';
+                doc.setTextColor(16, 185, 129);
+            } else if (calc.selisih > 0) {
+                selisihText = `SURPLUS (+${formatRupiah(calc.selisih)})`;
+                doc.setTextColor(59, 130, 246);
+            } else {
+                selisihText = `DEFICIT (${formatRupiah(calc.selisih)})`;
+                doc.setTextColor(239, 68, 68);
+            }
+            
+            doc.text('Status Selisih:', 20, currentY);
+            doc.text(selisihText, 176, currentY, { align: 'right' });
+
+            // Add catatan
+            if (val.catatan) {
+                currentY += 20;
+                doc.setTextColor(71, 85, 105);
+                doc.setFontSize(11);
+                doc.setFont(undefined, 'bold');
+                doc.text('Catatan / Keterangan:', 14, currentY);
+                
+                currentY += 7;
+                doc.setFont(undefined, 'normal');
+                doc.setFontSize(10);
+                const splitCatatan = doc.splitTextToSize(val.catatan, 180);
+                doc.text(splitCatatan, 14, currentY);
+            }
+
+            // Add footer
+            const pageHeight = doc.internal.pageSize.height;
+            doc.setFontSize(9);
+            doc.setTextColor(148, 163, 184);
+            doc.text('Dicetak oleh Sistem Kalkulator Kasir', 105, pageHeight - 15, { align: 'center' });
+            doc.text(now.toLocaleString('id-ID'), 105, pageHeight - 10, { align: 'center' });
+
+            // Save PDF
+            const fileName = `Laporan_Kasir_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}.pdf`;
+            doc.save(fileName);
+            
+            closePDFPreview();
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateDateTime();
+            setInterval(updateDateTime, 60000);
+            updateHistoryDisplay();
+            calculateAll();
+        });
+
+        // Close modal on outside click
+        document.getElementById('pdfPreview').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePDFPreview();
+            }
+        });
+    </script>
+</body>
+</html>
