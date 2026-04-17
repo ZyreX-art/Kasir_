@@ -5,10 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kalkulator Kasir - Sistem POS</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- jsPDF Library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <!-- AutoTable Plugin for jsPDF -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -137,7 +133,7 @@
             font-size: 0.95rem;
         }
 
-        .input-wrapper input {
+        .input-wrapper input, .input-wrapper select {
             width: 100%;
             padding: 12px 12px 12px 40px;
             border: 2px solid #e2e8f0;
@@ -148,14 +144,19 @@
             background: white;
         }
 
-        .input-wrapper input:focus {
+        .input-wrapper input:focus, .input-wrapper select:focus {
             outline: none;
             border-color: #667eea;
             box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
         }
 
-        .input-wrapper input:hover {
+        .input-wrapper input:hover, .input-wrapper select:hover {
             border-color: #cbd5e1;
+        }
+
+        .input-wrapper select {
+            padding-left: 15px;
+            cursor: pointer;
         }
 
         .payment-methods {
@@ -389,8 +390,8 @@
             color: white;
         }
 
-        .btn-pdf {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
+        .btn-whatsapp {
+            background: linear-gradient(135deg, #25d366, #128c7e);
             color: white;
         }
 
@@ -430,7 +431,7 @@
             color: #1e293b;
         }
 
-        .pdf-preview {
+        .whatsapp-modal {
             display: none;
             position: fixed;
             top: 0;
@@ -444,118 +445,151 @@
             padding: 20px;
         }
 
-        .pdf-preview.active {
+        .whatsapp-modal.active {
             display: flex;
         }
 
-        .pdf-preview-content {
+        .whatsapp-modal-content {
             background: white;
-            border-radius: 16px;
-            max-width: 600px;
+            border-radius: 20px;
+            max-width: 500px;
             width: 100%;
-            max-height: 80vh;
+            max-height: 90vh;
             overflow-y: auto;
             padding: 30px;
+            animation: slideUp 0.3s ease;
         }
 
-        .pdf-preview-header {
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .whatsapp-modal-header {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
+            gap: 15px;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
             border-bottom: 2px solid #e2e8f0;
         }
 
-        .pdf-preview-header h2 {
+        .whatsapp-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #25d366, #128c7e);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+        }
+
+        .whatsapp-modal-header h2 {
             color: #1e293b;
-            font-size: 1.3rem;
+            font-size: 1.4rem;
+            margin: 0;
+        }
+
+        .whatsapp-modal-header p {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin: 5px 0 0 0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-family: 'Poppins', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #25d366;
+            box-shadow: 0 0 0 4px rgba(37, 211, 102, 0.1);
+        }
+
+        .form-group .hint {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            margin-top: 6px;
+        }
+
+        .template-preview {
+            background: #f0fdf4;
+            border: 1px solid #86efac;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        .template-preview h4 {
+            color: #166534;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .template-preview pre {
+            background: white;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 0.85rem;
+            color: #1e293b;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 25px;
         }
 
         .close-btn {
             background: #e2e8f0;
             border: none;
-            width: 36px;
-            height: 36px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             cursor: pointer;
-            font-size: 1.2rem;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             transition: all 0.3s ease;
+            margin-left: auto;
         }
 
         .close-btn:hover {
             background: #cbd5e1;
-        }
-
-        .pdf-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-
-        .pdf-table th,
-        .pdf-table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        .pdf-table th {
-            background: #f8fafc;
-            font-weight: 600;
-            color: #475569;
-        }
-
-        .pdf-table td {
-            color: #1e293b;
-        }
-
-        .pdf-total {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 15px;
-            border-radius: 10px;
-            margin-top: 15px;
-        }
-
-        .pdf-total-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-        }
-
-        .pdf-total-row:last-child {
-            margin-bottom: 0;
-            padding-top: 8px;
-            border-top: 1px solid rgba(255,255,255,0.3);
-            font-weight: 700;
-            font-size: 1.1rem;
-        }
-
-        .pdf-catatan {
-            margin-top: 20px;
-            padding: 15px;
-            background: #f8fafc;
-            border-radius: 10px;
-            border-left: 4px solid #667eea;
-        }
-
-        .pdf-catatan h4 {
-            color: #475569;
-            margin-bottom: 8px;
-            font-size: 0.9rem;
-        }
-
-        .pdf-catatan p {
-            color: #1e293b;
-            font-size: 0.95rem;
-            line-height: 1.5;
-        }
-
-        .pdf-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
         }
 
         @media print {
@@ -567,7 +601,7 @@
                 box-shadow: none;
                 max-width: 100%;
             }
-            .btn-group, .history-section, .pdf-preview {
+            .btn-group, .history-section, .whatsapp-modal {
                 display: none;
             }
             .catatan-section textarea {
@@ -606,18 +640,46 @@
             margin-top: 4px;
         }
 
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,.3);
-            border-radius: 50%;
-            border-top-color: white;
-            animation: spin 1s ease-in-out infinite;
+        .saved-numbers {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 10px;
         }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        .saved-numbers h4 {
+            font-size: 0.85rem;
+            color: #475569;
+            margin-bottom: 10px;
+        }
+
+        .number-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .number-chip:hover {
+            background: #25d366;
+            color: white;
+            border-color: #25d366;
+        }
+
+        .number-chip .delete {
+            opacity: 0.5;
+            font-size: 1.1rem;
+        }
+
+        .number-chip:hover .delete {
+            opacity: 1;
         }
     </style>
 </head>
@@ -752,11 +814,8 @@
                 <button class="btn btn-success" onclick="saveTransaction()">
                     <span>💾</span> Simpan
                 </button>
-                <button class="btn btn-pdf" onclick="previewPDF()">
-                    <span>📄</span> Preview PDF
-                </button>
-                <button class="btn btn-danger" onclick="downloadPDF()">
-                    <span>⬇️</span> Download PDF
+                <button class="btn btn-whatsapp" onclick="openWhatsAppModal()">
+                    <span>💬</span> Kirim WA
                 </button>
             </div>
 
@@ -768,22 +827,57 @@
         </div>
     </div>
 
-    <!-- PDF Preview Modal -->
-    <div class="pdf-preview" id="pdfPreview">
-        <div class="pdf-preview-content">
-            <div class="pdf-preview-header">
-                <h2>📄 Preview Laporan Kasir</h2>
-                <button class="close-btn" onclick="closePDFPreview()">×</button>
+    <!-- WhatsApp Modal -->
+    <div class="whatsapp-modal" id="whatsappModal">
+        <div class="whatsapp-modal-content">
+            <div class="whatsapp-modal-header">
+                <div class="whatsapp-icon">💬</div>
+                <div style="flex: 1;">
+                    <h2>Kirim Laporan via WhatsApp</h2>
+                    <p>Kirim ringkasan transaksi ke nomor WhatsApp</p>
+                </div>
+                <button class="close-btn" onclick="closeWhatsAppModal()">×</button>
             </div>
-            <div id="pdfPreviewBody">
-                <!-- Content will be generated here -->
+
+            <div class="form-group">
+                <label>Nomor WhatsApp Tujuan</label>
+                <input type="tel" id="waNumber" placeholder="Contoh: 081234567890">
+                <div class="hint">Masukkan nomor dengan format Indonesia (08...) atau internasional (+62...)</div>
             </div>
-            <div class="pdf-actions">
-                <button class="btn btn-danger" onclick="downloadPDF()" style="flex: 1;">
-                    <span>⬇️</span> Download PDF
+
+            <div class="saved-numbers" id="savedNumbers" style="display: none;">
+                <h4>📱 Nomor Tersimpan:</h4>
+                <div id="numbersList"></div>
+            </div>
+
+            <div class="template-preview">
+                <h4>👁️ Preview Pesan:</h4>
+                <pre id="templatePreview">*LAPORAN KASIR*
+
+📅 Tanggal: [Tanggal]
+⏰ Waktu: [Waktu]
+
+💰 *RINGKASAN PENJUALAN*
+━━━━━━━━━━━━━━━━
+• Total Penjualan: Rp 0
+• Non-Tunai: Rp 0
+• Expected Cash: Rp 0
+• Uang Fisik: Rp 0
+
+📊 *SELISIH: Rp 0 (BALANCE)*
+
+📝 Catatan:
+[Tidak ada catatan]
+
+_Dicetak otomatis oleh sistem_</pre>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeWhatsAppModal()" style="flex: 1;">
+                    Batal
                 </button>
-                <button class="btn btn-secondary" onclick="closePDFPreview()" style="flex: 1;">
-                    <span>✕</span> Tutup
+                <button class="btn btn-whatsapp" onclick="sendToWhatsApp()" style="flex: 2;">
+                    <span>🚀</span> Buka WhatsApp
                 </button>
             </div>
         </div>
@@ -926,252 +1020,141 @@
             }
         }
 
-        // Generate PDF Content
-        function generatePDFContent() {
+        // Generate WhatsApp message template
+        function generateWhatsAppMessage() {
             const val = getValues();
             const calc = calculateAll();
             const now = new Date();
             
             let selisihText = '';
-            let selisihClass = '';
+            let selisihEmoji = '';
             if (calc.selisih === 0) {
-                selisihText = 'BALANCE';
-                selisihClass = 'balanced';
+                selisihText = 'BALANCE ✅';
+                selisihEmoji = '✅';
             } else if (calc.selisih > 0) {
-                selisihText = `SURPLUS (+${formatRupiah(calc.selisih)})`;
-                selisihClass = 'surplus';
+                selisihText = `SURPLUS +${formatRupiah(calc.selisih)} 📈`;
+                selisihEmoji = '📈';
             } else {
-                selisihText = `DEFICIT (${formatRupiah(calc.selisih)})`;
-                selisihClass = 'deficit';
+                selisihText = `DEFICIT ${formatRupiah(calc.selisih)} 📉`;
+                selisihEmoji = '📉';
             }
 
-            return `
-                <div style="text-align: center; margin-bottom: 25px;">
-                    <h2 style="color: #1e293b; margin-bottom: 5px;">LAPORAN KASIR</h2>
-                    <p style="color: #64748b; font-size: 0.9rem;">${now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
-                </div>
+            const catatanText = val.catatan ? val.catatan : 'Tidak ada catatan';
 
-                <table class="pdf-table">
-                    <thead>
-                        <tr>
-                            <th colspan="2">📊 Rincian Transaksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Kas Awal (Modal)</td>
-                            <td style="text-align: right; font-weight: 600;">${formatRupiah(val.kasAwal)}</td>
-                        </tr>
-                        <tr>
-                            <td>💵 Cash (Tunai)</td>
-                            <td style="text-align: right; font-weight: 600;">${formatRupiah(val.cash)}</td>
-                        </tr>
-                        <tr>
-                            <td>📱 QRIS BCA</td>
-                            <td style="text-align: right; font-weight: 600;">${formatRupiah(val.qrisBca)}</td>
-                        </tr>
-                        <tr>
-                            <td>📲 QRIS Mandiri</td>
-                            <td style="text-align: right; font-weight: 600;">${formatRupiah(val.qrisMandiri)}</td>
-                        </tr>
-                        <tr>
-                            <td>💳 EDC BCA</td>
-                            <td style="text-align: right; font-weight: 600;">${formatRupiah(val.edcBca)}</td>
-                        </tr>
-                        <tr>
-                            <td>🛵 GrabFood</td>
-                            <td style="text-align: right; font-weight: 600;">${formatRupiah(val.grab)}</td>
-                        </tr>
-                        <tr>
-                            <td>🍜 GoFood</td>
-                            <td style="text-align: right; font-weight: 600;">${formatRupiah(val.gofood)}</td>
-                        </tr>
-                        <tr>
-                            <td>🍱 ShopeeFood</td>
-                            <td style="text-align: right; font-weight: 600;">${formatRupiah(val.shopeefood)}</td>
-                        </tr>
-                    </tbody>
-                </table>
+            return `*LAPORAN KASIR*
 
-                <div class="pdf-total">
-                    <div class="pdf-total-row">
-                        <span>Total Penjualan</span>
-                        <span>${formatRupiah(calc.totalPenjualan)}</span>
-                    </div>
-                    <div class="pdf-total-row">
-                        <span>Non-Tunai (QRIS/EDC/Ojol)</span>
-                        <span>${formatRupiah(calc.totalNonTunai)}</span>
-                    </div>
-                    <div class="pdf-total-row">
-                        <span>Expected Cash</span>
-                        <span>${formatRupiah(calc.expectedCash)}</span>
-                    </div>
-                    <div class="pdf-total-row">
-                        <span>Uang Fisik di Laci</span>
-                        <span>${formatRupiah(val.uangFisik)}</span>
-                    </div>
-                    <div class="pdf-total-row">
-                        <span>Status Selisih</span>
-                        <span style="font-size: 1.2rem;">${selisihText}</span>
-                    </div>
-                </div>
+📅 Tanggal: ${now.toLocaleDateString('id-ID')}
+⏰ Waktu: ${now.toLocaleTimeString('id-ID')}
 
-                ${val.catatan ? `
-                <div class="pdf-catatan">
-                    <h4>📝 Catatan / Keterangan:</h4>
-                    <p>${val.catatan.replace(/\n/g, '<br>')}</p>
-                </div>
-                ` : ''}
+💰 *RINGKASAN PENJUALAN*
+━━━━━━━━━━━━━━━━
+• Total Penjualan: ${formatRupiah(calc.totalPenjualan)}
+• Non-Tunai: ${formatRupiah(calc.totalNonTunai)}
+• Expected Cash: ${formatRupiah(calc.expectedCash)}
+• Uang Fisik: ${formatRupiah(val.uangFisik)}
 
-                <div style="margin-top: 30px; padding-top: 20px; border-top: 2px dashed #e2e8f0; text-align: center; color: #94a3b8; font-size: 0.85rem;">
-                    <p>Dicetak oleh Sistem Kalkulator Kasir</p>
-                    <p>${now.toLocaleString('id-ID')}</p>
-                </div>
-            `;
+📊 *SELISIH: ${selisihText}*
+
+📝 *Catatan:*
+${catatanText}
+
+_Dicetak otomatis oleh sistem_`;
         }
 
-        // Preview PDF
-        function previewPDF() {
-            const content = generatePDFContent();
-            document.getElementById('pdfPreviewBody').innerHTML = content;
-            document.getElementById('pdfPreview').classList.add('active');
+        // Open WhatsApp Modal
+        function openWhatsAppModal() {
+            const message = generateWhatsAppMessage();
+            document.getElementById('templatePreview').textContent = message;
+            document.getElementById('whatsappModal').classList.add('active');
+            loadSavedNumbers();
         }
 
-        // Close PDF Preview
-        function closePDFPreview() {
-            document.getElementById('pdfPreview').classList.remove('active');
+        // Close WhatsApp Modal
+        function closeWhatsAppModal() {
+            document.getElementById('whatsappModal').classList.remove('active');
         }
 
-        // Download PDF using jsPDF
-        async function downloadPDF() {
-            const { jsPDF } = window.jspdf;
-            const val = getValues();
-            const calc = calculateAll();
-            const now = new Date();
+        // Load saved numbers
+        function loadSavedNumbers() {
+            const saved = JSON.parse(localStorage.getItem('waNumbers') || '[]');
+            const container = document.getElementById('savedNumbers');
+            const list = document.getElementById('numbersList');
             
-            // Create PDF
-            const doc = new jsPDF();
-            
-            // Add header
-            doc.setFontSize(20);
-            doc.setTextColor(30, 41, 59);
-            doc.text('LAPORAN KASIR', 105, 20, { align: 'center' });
-            
-            doc.setFontSize(10);
-            doc.setTextColor(100, 116, 139);
-            doc.text(now.toLocaleDateString('id-ID', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            }), 105, 28, { align: 'center' });
-
-            // Add table
-            const tableData = [
-                ['Kas Awal (Modal)', formatRupiah(val.kasAwal)],
-                ['Cash (Tunai)', formatRupiah(val.cash)],
-                ['QRIS BCA', formatRupiah(val.qrisBca)],
-                ['QRIS Mandiri', formatRupiah(val.qrisMandiri)],
-                ['EDC BCA', formatRupiah(val.edcBca)],
-                ['GrabFood', formatRupiah(val.grab)],
-                ['GoFood', formatRupiah(val.gofood)],
-                ['ShopeeFood', formatRupiah(val.shopeefood)],
-            ];
-
-            doc.autoTable({
-                startY: 40,
-                head: [['Metode Pembayaran', 'Jumlah']],
-                body: tableData,
-                theme: 'striped',
-                headStyles: { 
-                    fillColor: [102, 126, 234],
-                    textColor: 255,
-                    fontStyle: 'bold'
-                },
-                styles: { 
-                    fontSize: 11,
-                    cellPadding: 5
-                },
-                columnStyles: {
-                    0: { cellWidth: 100 },
-                    1: { cellWidth: 60, halign: 'right' }
-                }
-            });
-
-            // Add summary
-            const finalY = doc.lastAutoTable.finalY + 10;
-            
-            doc.setFillColor(30, 41, 59);
-            doc.rect(14, finalY, 182, 60, 'F');
-            
-            doc.setTextColor(255, 255, 255);
-            doc.setFontSize(11);
-            
-            let currentY = finalY + 10;
-            
-            doc.text('Total Penjualan:', 20, currentY);
-            doc.text(formatRupiah(calc.totalPenjualan), 176, currentY, { align: 'right' });
-            
-            currentY += 10;
-            doc.text('Non-Tunai (QRIS/EDC/Ojol):', 20, currentY);
-            doc.text(formatRupiah(calc.totalNonTunai), 176, currentY, { align: 'right' });
-            
-            currentY += 10;
-            doc.text('Expected Cash:', 20, currentY);
-            doc.text(formatRupiah(calc.expectedCash), 176, currentY, { align: 'right' });
-            
-            currentY += 10;
-            doc.text('Uang Fisik di Laci:', 20, currentY);
-            doc.text(formatRupiah(val.uangFisik), 176, currentY, { align: 'right' });
-            
-            currentY += 12;
-            doc.setFontSize(13);
-            doc.setFont(undefined, 'bold');
-            
-            let selisihText = '';
-            if (calc.selisih === 0) {
-                selisihText = 'BALANCE';
-                doc.setTextColor(16, 185, 129);
-            } else if (calc.selisih > 0) {
-                selisihText = `SURPLUS (+${formatRupiah(calc.selisih)})`;
-                doc.setTextColor(59, 130, 246);
+            if (saved.length > 0) {
+                container.style.display = 'block';
+                list.innerHTML = saved.map(num => `
+                    <span class="number-chip" onclick="selectNumber('${num}')">
+                        📱 ${num}
+                        <span class="delete" onclick="deleteNumber(event, '${num}')">×</span>
+                    </span>
+                `).join('');
             } else {
-                selisihText = `DEFICIT (${formatRupiah(calc.selisih)})`;
-                doc.setTextColor(239, 68, 68);
+                container.style.display = 'none';
+            }
+        }
+
+        // Select number
+        function selectNumber(number) {
+            document.getElementById('waNumber').value = number;
+        }
+
+        // Delete number
+        function deleteNumber(event, number) {
+            event.stopPropagation();
+            let saved = JSON.parse(localStorage.getItem('waNumbers') || '[]');
+            saved = saved.filter(n => n !== number);
+            localStorage.setItem('waNumbers', JSON.stringify(saved));
+            loadSavedNumbers();
+        }
+
+        // Save number
+        function saveNumber(number) {
+            let saved = JSON.parse(localStorage.getItem('waNumbers') || '[]');
+            if (!saved.includes(number)) {
+                saved.push(number);
+                localStorage.setItem('waNumbers', JSON.stringify(saved));
+            }
+        }
+
+        // Format phone number
+        function formatPhoneNumber(number) {
+            // Remove all non-digit characters
+            let cleaned = number.replace(/\D/g, '');
+            
+            // If starts with 0, replace with 62
+            if (cleaned.startsWith('0')) {
+                cleaned = '62' + cleaned.substring(1);
             }
             
-            doc.text('Status Selisih:', 20, currentY);
-            doc.text(selisihText, 176, currentY, { align: 'right' });
-
-            // Add catatan
-            if (val.catatan) {
-                currentY += 20;
-                doc.setTextColor(71, 85, 105);
-                doc.setFontSize(11);
-                doc.setFont(undefined, 'bold');
-                doc.text('Catatan / Keterangan:', 14, currentY);
-                
-                currentY += 7;
-                doc.setFont(undefined, 'normal');
-                doc.setFontSize(10);
-                const splitCatatan = doc.splitTextToSize(val.catatan, 180);
-                doc.text(splitCatatan, 14, currentY);
+            // If doesn't start with 62, add it
+            if (!cleaned.startsWith('62')) {
+                cleaned = '62' + cleaned;
             }
-
-            // Add footer
-            const pageHeight = doc.internal.pageSize.height;
-            doc.setFontSize(9);
-            doc.setTextColor(148, 163, 184);
-            doc.text('Dicetak oleh Sistem Kalkulator Kasir', 105, pageHeight - 15, { align: 'center' });
-            doc.text(now.toLocaleString('id-ID'), 105, pageHeight - 10, { align: 'center' });
-
-            // Save PDF
-            const fileName = `Laporan_Kasir_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}.pdf`;
-            doc.save(fileName);
             
-            closePDFPreview();
+            return cleaned;
+        }
+
+        // Send to WhatsApp
+        function sendToWhatsApp() {
+            const number = document.getElementById('waNumber').value.trim();
+            
+            if (!number) {
+                alert('Silakan masukkan nomor WhatsApp tujuan!');
+                return;
+            }
+            
+            const formattedNumber = formatPhoneNumber(number);
+            const message = generateWhatsAppMessage();
+            const encodedMessage = encodeURIComponent(message);
+            
+            // Save number
+            saveNumber(number);
+            
+            // Open WhatsApp
+            const waUrl = `https://wa.me/${formattedNumber}?text=${encodedMessage}`;
+            window.open(waUrl, '_blank');
+            
+            closeWhatsAppModal();
         }
 
         // Initialize
@@ -1183,9 +1166,9 @@
         });
 
         // Close modal on outside click
-        document.getElementById('pdfPreview').addEventListener('click', function(e) {
+        document.getElementById('whatsappModal').addEventListener('click', function(e) {
             if (e.target === this) {
-                closePDFPreview();
+                closeWhatsAppModal();
             }
         });
     </script>
